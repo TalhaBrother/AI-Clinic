@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 
 // 1. Updated Schema to include Role and Subscription Plan [cite: 163, 164]
 const registerSchema = yup.object().shape({
@@ -40,7 +41,7 @@ const Register = () => {
 
         // 2. Save the user object (we must use JSON.stringify because localStorage only stores strings)
         localStorage.setItem('user', JSON.stringify(response.data.user));
-            window.location.href('/');
+            window.location.href='/';
         } catch (err) {
             setIsError(true);
             setError(err);
@@ -48,7 +49,12 @@ const Register = () => {
             setIsPending(false);
         }
     };
-
+useEffect(() => {
+    const user = localStorage.getItem('user');
+    if (user) {
+        navigate('/dashboard');
+    }
+}, [navigate]);
     return (
         <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
             <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">

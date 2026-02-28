@@ -31,7 +31,7 @@ const Login = () => {
 
         // 2. Save the user object (we must use JSON.stringify because localStorage only stores strings)
         localStorage.setItem('user', JSON.stringify(response.data.user));
-            window.location.href('/')
+            navigate('/dashboard')
         } catch (err) {
             setIsError(true)
             setError(err)

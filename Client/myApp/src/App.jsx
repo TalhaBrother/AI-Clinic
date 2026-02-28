@@ -18,6 +18,7 @@ function App() {
       {/* 2. Move Dashboard to its own path */}
       <Route element={<ProtectedRoute allowedRoles={['Admin', 'Doctor', 'Receptionist', 'Patient']} />}>
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path='/doctor' element={<DoctorView />} />
       </Route>
 
       {/* Doctor Only Routes */}
