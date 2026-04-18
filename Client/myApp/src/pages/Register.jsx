@@ -11,7 +11,7 @@ const registerSchema = yup.object().shape({
     username: yup.string().required("Username is required"),
     email: yup.string().email("Invalid email").required("Email is required"),
     password: yup.string().min(6, "Password must be at least 6 characters").required(),
-    role: yup.string().oneOf(['Admin', 'Doctor', 'Receptionist', 'Patient'], "Invalid Role").required("Role is required"),
+    role: yup.string().oneOf(['Doctor', 'Receptionist', 'Patient'], "Invalid Role").required("Role is required"),
     subscription_plan: yup.string().oneOf(['Free', 'Pro'], "Invalid Plan").required("Plan selection is required"),
 });
 
@@ -88,7 +88,6 @@ useEffect(() => {
                             {...register("role")}
                             className="border border-gray-300 rounded-lg px-4 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500"
                         >
-                            <option value="Admin">Admin</option>
                             <option value="Doctor">Doctor</option>
                             <option value="Receptionist">Receptionist</option>
                             <option value="Patient">Patient</option>

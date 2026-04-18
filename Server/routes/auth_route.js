@@ -14,12 +14,12 @@ const registerSchema = yup.object().shape({
     username: yup.string().required(),
     email: yup.string().email().required(),
     password: yup.string().min(6).required(),
-    role: yup.string().oneOf(['Admin', 'Doctor', 'Receptionist', 'Patient']).required(),
+    role: yup.string().oneOf(['Doctor', 'Receptionist', 'Patient']).required(),
     subscription_plan: yup.string().oneOf(['Free', 'Pro']).required(), // Changed to match schema
 })
 
 const loginSchema = yup.object().shape({
-    email: yup.string().email().required(),
+    username: yup.string().required(),
     password: yup.string().min(6).required()
 })
 
@@ -70,13 +70,13 @@ authRoute.post('/register', async (req, res) => {
 
 authRoute.post('/login', async (req, res) => {
     try {
-        const { email, password } = req.body
+        const { username, password } = req.body
 
-        if (!loginSchema.isValidSync({ email, password })) {
+        if (!loginSchema.isValidSync({ username, password })) {
             return res.status(400).send('Invalid input')
         }
 
-        const user = await User.findOne({ email })
+        const user = await User.findOne({ name: username })
         if (!user) {
             return res.status(404).send('User not found')
         }
@@ -109,6 +109,16 @@ authRoute.post('/login', async (req, res) => {
         res.status(500).send('Login failed: ' + error.message)
     }
 })
+// Get all patients for Admin
+authRoute.get('/patients', async (req, res) => {
+    try {
+        const patients = await User.find({ role: 'Patient' });
+        res.json(patients);
+    } catch (err) {
+        res.status(500).send("Error fetching patients");
+    }
+});
+
 // Get all staff for Admin
 authRoute.get('/staff', async (req, res) => {
     try {

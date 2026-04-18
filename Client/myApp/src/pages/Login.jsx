@@ -6,7 +6,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { useNavigate } from 'react-router-dom'
 
 const loginSchema = yup.object().shape({
-    email: yup.string().email().required(),
+    username: yup.string().required("Username is required"),
     password: yup.string().min(6).required()
 })
 
@@ -47,17 +47,17 @@ const Login = () => {
 
                 <form onSubmit={handleSubmit(submitLogin)} className="flex flex-col gap-4">
 
-                    {/* Email */}
+                    {/* Username */}
                     <div className="flex flex-col gap-1">
-                        <label className="text-sm font-medium text-gray-700 self-start">Email</label>
+                        <label className="text-sm font-medium text-gray-700 self-start">Username</label>
                         <input
-                            {...register("email")}
-                            placeholder="Enter your email"
+                            {...register("username")}
+                            placeholder="Enter your username"
                             className={`border rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition
-                            ${errors.email ? 'border-red-500 focus:ring-red-400' : 'border-gray-300'}`}
+                            ${errors.username ? 'border-red-500 focus:ring-red-400' : 'border-gray-300'}`}
                         />
-                        {errors.email && (
-                            <p className="text-red-500 text-xs mt-1">⚠ {errors.email.message}</p>
+                        {errors.username && (
+                            <p className="text-red-500 text-xs mt-1">⚠ {errors.username.message}</p>
                         )}
                     </div>
 

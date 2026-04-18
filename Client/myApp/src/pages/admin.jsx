@@ -6,8 +6,10 @@ const Admin_Dashboard = () => {
     
     // --- STATE MANAGEMENT ---
     const [staff, setStaff] = useState([]);
+    const [patients, setPatients] = useState([]);
     const [showStaff, setShowStaff] = useState(false);
-    const [showPlans, setShowPlans] = useState(false); // To manage SaaS view
+    const [showPatients, setShowPatients] = useState(false);
+    const [showPlans, setShowPlans] = useState(false);
     const [loading, setLoading] = useState(false);
     const [analytics, setAnalytics] = useState({ staff: 0, patients: 0, proPlans: 0, freePlans: 0, totalUsers: 0 });
 
@@ -21,9 +23,29 @@ const Admin_Dashboard = () => {
             });
             setStaff(response.data);
             setShowStaff(true);
+            setShowPatients(false);
             setShowPlans(false);
         } catch (err) {
             alert("Error fetching staff list");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // --- FETCH PATIENTS DATA ---
+    const fetchPatients = async () => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get('http://localhost:3000/auth/patients', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setPatients(response.data);
+            setShowPatients(true);
+            setShowStaff(false);
+            setShowPlans(false);
+        } catch (err) {
+            alert("Error fetching patients list");
         } finally {
             setLoading(false);
         }
@@ -44,14 +66,15 @@ const Admin_Dashboard = () => {
 
     // --- DELETE STAFF FUNCTION (KEPT AS REQUESTED) ---
     const deleteUser = async (id) => {
-        if(!window.confirm("Are you sure you want to remove this staff member?")) return;
+        if(!window.confirm("Are you sure you want to remove this user?")) return;
         try {
             const token = localStorage.getItem('token');
             await axios.delete(`http://localhost:3000/auth/users/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setStaff(staff.filter(u => u._id !== id));
-            fetchAnalytics(); // Refresh numbers after deletion
+            setPatients(patients.filter(u => u._id !== id));
+            fetchAnalytics();
         } catch (err) {
             alert("Failed to delete user");
         }
@@ -66,11 +89,11 @@ const Admin_Dashboard = () => {
         <div className="p-6">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-blue-800">
-                    {showStaff ? "Manage Staff" : showPlans ? "Subscription Plans" : "Admin Command Center"}
+                    {showStaff ? "Manage Staff" : showPatients ? "All Patients" : showPlans ? "Subscription Plans" : "Admin Command Center"}
                 </h2>
-                {(showStaff || showPlans) && (
+                {(showStaff || showPatients || showPlans) && (
                     <button 
-                        onClick={() => { setShowStaff(false); setShowPlans(false); }} 
+                        onClick={() => { setShowStaff(false); setShowPatients(false); setShowPlans(false); }} 
                         className="text-blue-600 hover:underline text-sm font-medium"
                     >
                         ← Back to Overview
@@ -78,7 +101,7 @@ const Admin_Dashboard = () => {
                 )}
             </div>
 
-            {!showStaff && !showPlans ? (
+            {!showStaff && !showPatients && !showPlans ? (
                 /* --- DASHBOARD OVERVIEW CARDS --- */
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {/* Staff Card */}
@@ -90,14 +113,23 @@ const Admin_Dashboard = () => {
                         </button>
                     </div>
 
-                    {/* Analytics Card */}
+                    {/* Patients Card */}
                     <div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-green-500">
+                        <h3 className="font-bold text-lg">Manage Patients</h3>
+                        <p className="text-gray-600 text-sm mb-4">Total Patients: {analytics.patients}</p>
+                        <button onClick={fetchPatients} className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm">
+                            {loading ? "Loading..." : "View Patients List"}
+                        </button>
+                    </div>
+
+                    {/* Analytics Card */}
+                    <div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-teal-500">
                         <h3 className="font-bold text-lg">System Analytics</h3>
                         <div className="mt-2">
-                            <p className="text-3xl font-bold text-green-600">{analytics.patients}</p>
-                            <p className="text-gray-500 text-xs uppercase font-semibold">Patients Registered</p>
+                            <p className="text-3xl font-bold text-teal-600">{analytics.totalUsers}</p>
+                            <p className="text-gray-500 text-xs uppercase font-semibold">Total Users</p>
                         </div>
-                        <p className="text-gray-400 text-xs mt-4 italic text-right">Total Database: {analytics.totalUsers}</p>
+                        <p className="text-gray-400 text-xs mt-4 italic text-right">Staff: {analytics.staff} | Patients: {analytics.patients}</p>
                     </div>
 
                     {/* SaaS Card */}
@@ -114,7 +146,7 @@ const Admin_Dashboard = () => {
                             </div>
                         </div>
                         <button 
-                            onClick={() => { fetchStaff(); setShowPlans(true); setShowStaff(false); }}
+                            onClick={() => { fetchStaff(); setShowPlans(true); setShowStaff(false); setShowPatients(false); }}
                             className="bg-purple-600 w-full mt-4 text-white px-4 py-2 rounded-lg text-sm"
                         >
                             Manage SaaS
@@ -122,7 +154,7 @@ const Admin_Dashboard = () => {
                     </div>
                 </div>
             ) : (
-                /* --- DATA TABLE VIEW (STAFF & PLANS) --- */
+                /* --- DATA TABLE VIEW (STAFF, PATIENTS & PLANS) --- */
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
                      <table className="w-full text-left">
                         <thead className="bg-gray-50 text-gray-600 text-xs font-semibold uppercase">
@@ -134,14 +166,18 @@ const Admin_Dashboard = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {staff.map((s) => (
+                            {(showPatients ? patients : staff).map((s) => (
                                 <tr key={s._id} className="hover:bg-blue-50">
                                     <td className="px-6 py-4 font-medium text-gray-900">
                                         {s.name}
                                         <div className="text-xs text-gray-400">{s.email}</div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded text-xs font-bold ${s.role === 'Doctor' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
+                                        <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                            s.role === 'Doctor' ? 'bg-blue-100 text-blue-700' :
+                                            s.role === 'Patient' ? 'bg-green-100 text-green-700' :
+                                            'bg-orange-100 text-orange-700'
+                                        }`}>
                                             {s.role}
                                         </span>
                                     </td>
